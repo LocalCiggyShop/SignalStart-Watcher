@@ -1,19 +1,24 @@
-SignalStart Watcher for Windows Chrome
+SignalStart Watcher automatic updates in Chrome
 
-1. Extract this ZIP, then run SignalStartUpdater.exe.
-2. For a private GitHub release, enter your own GitHub access token
-   with read access to the repository shown in Setup.
-3. Open chrome://extensions. Turn on Developer mode, choose Load
-   unpacked, and select the folder printed by Setup.
+1. Extract the ZIP to a folder you control, such as a folder on your
+   Desktop or in Documents. Use chrome://extensions, turn on Developer
+   mode, and load the extracted Signalstart_v1.5.0 folder once through
+   Load unpacked. Leave that folder in place and Developer mode on.
+2. Open the extension popup and click Updates. Choose the exact folder
+   you loaded and approve Chrome's request for write access.
+3. Save your own GitHub token with read access to the private
+   LocalCiggyShop/SignalStart-Watcher repository. For a fine-grained
+   token, select that repository and grant Contents read access.
+4. Select Allow on every visit when Chrome offers it. If the first
+   prompt only offered Allow, restart Chrome once, open Updates,
+   select Restore folder access, and choose Allow on every visit.
 
-The extension checks for signed updates when Chrome starts or its popup
-opens. Refresh any SignalStart analysis tabs already open after an update
-to resume live page reads.
+The extension worker checks for a signed release when Chrome starts or
+when you open the popup. It stages the new files in the selected folder
+and reloads the extension in place. Refresh SignalStart analysis tabs
+that were already open after an update to resume live page reads.
 
-If you already use an unpacked copy from another folder, note your watched
-signals and preferences before switching to the new managed folder.
-
-To replace an expired GitHub token, run the same setup ZIP's executable
-with --replace-token from a Windows PowerShell window in that folder:
-
-    .\SignalStartUpdater.exe --replace-token
+If you are switching from the older Windows setup, load this ZIP in a
+folder such as the Desktop. Chrome blocks folder-picker access inside
+AppData. Switching folders gives the extension a new ID, so set up the
+watchlist and preferences once in the browser-only copy.

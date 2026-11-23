@@ -100,7 +100,8 @@ chrome.storage?.onChanged?.addListener((changes, area) => {
 await send("RESUME_MONITORING");
 await loadState({ includeSettings: true });
 send("CHECK_FOR_UPDATE").then(result => {
-  if (result.error) document.getElementById("updateStatus").textContent = result.error;
+  const status = result.error ?? (result.status === "permission" ? "Open Updates to restore folder access." : "");
+  if (status) document.getElementById("updateStatus").textContent = status;
 });
 
 async function loadState({ includeSettings = false } = {}) {

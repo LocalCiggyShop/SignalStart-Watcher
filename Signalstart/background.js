@@ -11,9 +11,11 @@ import {
   percentChange
 } from "./shared.js";
 import "./trade-reader.js";
+import { installAvailableUpdate } from "./browser-updater.js";
 
 const ALARM_NAME = "signalstart-poll";
-const OFFSCREEN_PATH = "offscreen.html";
+const OFFSCREEN_URL = new URL("./offscreen.html", import.meta.url);
+const UPDATE_PAGES = ["popup.html", "updates.html"].map(page => new URL(page, import.meta.url).href);
 let pollingPromise = null;
 let offscreenCreating = null;
 let bootstrapPromise = null;
@@ -82,12 +84,12 @@ async function hasOffscreenDocument() {
   if (chrome.runtime.getContexts) {
     const contexts = await chrome.runtime.getContexts({
       contextTypes: ["OFFSCREEN_DOCUMENT"],
-      documentUrls: [chrome.runtime.getURL(OFFSCREEN_PATH)]
+      documentUrls: [OFFSCREEN_URL.href]
     });
     return contexts.length > 0;
   }
   const clients = await self.clients.matchAll();
-  return clients.some((client) => client.url.endsWith(OFFSCREEN_PATH));
+  return clients.some((client) => client.url === OFFSCREEN_URL.href);
 }
 
 async function ensureOffscreen() {
@@ -99,7 +101,7 @@ async function ensureOffscreen() {
     if (await hasOffscreenDocument()) return;
     try {
       await chrome.offscreen.createDocument({
-        url: OFFSCREEN_PATH,
+        url: OFFSCREEN_URL.pathname.slice(1),
         reasons: ["AUDIO_PLAYBACK"],
         justification: "Play a sound for SignalStart desktop notifications."
       });
@@ -212,7 +214,7 @@ async function notify(
   if (settings.notificationsEnabled === false) return false;
   await chrome.notifications.create(notificationId, {
     type: "basic",
-    iconUrl: "icons/icon128.png",
+    iconUrl: chrome.runtime.getManifest?.().icons?.["128"] ?? "icons/icon128.png",
     title: `${signal.name}: ${decision.title}`,
     message: decision.message,
     priority: 2
@@ -513,15 +515,11 @@ function checkForUpdate() {
   if (!updateCheck) {
     updateCheck = (async () => {
       try {
-        const result = await chrome.runtime.sendNativeMessage("com.signalstart.watcher_updater", {
-          version: chrome.runtime.getManifest().version
-        });
-        if (result?.reload === true) chrome.runtime.reload();
-        return result?.error ? { error: result.error } : { ok: true };
+        const status = await installAvailableUpdate();
+        if (status === "installed") chrome.runtime.reload();
+        return { status };
       } catch (error) {
-        return { error: /native messaging host not found/i.test(error.message)
-          ? "Automatic updates need the Windows updater setup."
-          : `Update check failed. ${error.message}` };
+        return { error: error.message || String(error) };
       }
     })().finally(() => { updateCheck = null; });
   }
@@ -564,7 +562,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case "RESUME_MONITORING":
       return respond(refreshBrowserPresence().then(() => ({ ok: true })));
     case "CHECK_FOR_UPDATE":
-      if (sender.url !== chrome.runtime.getURL("popup.html")) return false;
+      if (!UPDATE_PAGES.includes(sender.url)) return false;
       return respond(checkForUpdate());
     case "ADD_SIGNAL":
       return respond(addSignal(message.payload).then((signal) => ({ signal })));
