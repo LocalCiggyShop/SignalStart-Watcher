@@ -1,0 +1,1 @@
+Installer self-test passed: embedded components, ID validation, three simulated registrations, reinstall and manifest path. No real registry keys changed.

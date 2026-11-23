@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SignalStart Watcher</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <img src="icons/icon48.png" width="32" height="32" alt="" />
+        <h1>SignalStart Watcher</h1>
+      </div>
+      <button id="refreshBtn" type="button" class="secondary">Check now</button>
+    </header>
+
+    <main>
+      <section class="card" aria-labelledby="followTitle">
+        <h2 id="followTitle"><label for="searchInput">Follow a signal</label></h2>
+        <div class="search-row">
+          <input id="searchInput" type="search" placeholder="Name or analysis URL" autocomplete="off" />
+          <button id="trackPageBtn" type="button">Watch this page</button>
+        </div>
+        <p id="searchStatus" class="hint" role="status"></p>
+        <ul id="searchResults" class="results hidden" aria-label="Matching signals"></ul>
+      </section>
+
+      <section class="card" aria-labelledby="watchlistTitle">
+        <div class="section-heading">
+          <h2 id="watchlistTitle">Watchlist</h2>
+          <span id="watchCount" class="count"></span>
+        </div>
+        <ul id="signalList" class="signals"></ul>
+        <p id="emptyState" class="empty">Search above or open a SignalStart analysis page to start watching.</p>
+      </section>
+
+      <section class="card" aria-labelledby="alertsTitle">
+        <div class="section-heading">
+          <h2 id="alertsTitle">Desktop alerts</h2>
+          <button id="testNotificationBtn" type="button" class="secondary">Send test</button>
+        </div>
+        <p id="testNotificationStatus" class="hint" role="status"></p>
+        <div class="master-row">
+          <div>
+            <strong>Notifications</strong>
+            <p id="notifyStatus" class="hint" role="status">On</p>
+          </div>
+          <button id="notifyToggleBtn" type="button" class="switch" role="switch"
+            aria-label="Desktop notifications" aria-checked="true"></button>
+        </div>
+
+        <div class="rules">
+          <label class="rule">
+            <span>New trade opened</span>
+            <input id="alertOnOpenTrades" type="checkbox" role="switch" checked />
+          </label>
+          <label class="rule">
+            <span>Floating P/L leaves zero</span>
+            <input id="alertOnLeaveZero" type="checkbox" role="switch" checked />
+          </label>
+          <label class="rule">
+            <span>Other Floating P/L changes</span>
+            <input id="alertOnAnyChange" type="checkbox" role="switch" checked />
+          </label>
+          <label class="rule">
+            <span>Loss threshold reached</span>
+            <input id="alertOnDrawdown" type="checkbox" role="switch" />
+          </label>
+          <div id="drawdownFields" class="rule-details hidden">
+            <label class="select-row">
+              Loss amount
+              <input id="drawdownAmount" type="number" min="0.01" step="0.01" value="100" required
+                aria-describedby="drawdownHint drawdownError" />
+            </label>
+            <p id="drawdownHint" class="hint">Use the signal’s currency. 100 alerts when P/L reaches −100.</p>
+            <p id="drawdownError" class="hint error hidden" role="status"></p>
+          </div>
+          <label class="rule">
+            <span>Play a sound</span>
+            <input id="playSound" type="checkbox" role="switch" checked />
+          </label>
+        </div>
+        <details class="advanced">
+          <summary>Monitoring settings</summary>
+          <div class="advanced-fields">
+            <label class="select-row">
+              Background check interval
+              <select id="pollMinutes">
+                <option value="5" selected>5 min</option>
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+                <option value="60">1 hour</option>
+              </select>
+            </label>
+            <label class="select-row">
+              Minimum P/L change (%)
+              <input id="changePercent" type="number" min="0" step="0.1" value="0" />
+            </label>
+          </div>
+        </details>
+        <p id="settingsStatus" class="hint error" role="status"></p>
+      </section>
+
+      <aside class="mt5-status"><span>MT5 connection</span><span>Unavailable</span></aside>
+    </main>
+
+    <footer>
+      <span id="updateStatus" role="status">Background checks pause when the browser closes.</span>
+      <span id="versionLabel"></span>
+    </footer>
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>

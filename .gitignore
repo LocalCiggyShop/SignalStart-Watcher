@@ -1,0 +1,5 @@
+*.zip
+*.pem
+*.log
+github-update-token.bin
+release-*/

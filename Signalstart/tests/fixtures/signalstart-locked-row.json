@@ -1,0 +1,62 @@
+{
+  "cells": [
+    {
+      "text": "15/10/2026",
+      "locked": false
+    },
+    {
+      "text": "CHFJPY",
+      "locked": false
+    },
+    {
+      "text": "",
+      "locked": true
+    },
+    {
+      "text": "",
+      "locked": true
+    },
+    {
+      "text": "",
+      "locked": true
+    },
+    {
+      "text": "",
+      "locked": true
+    },
+    {
+      "text": "",
+      "locked": true
+    },
+    {
+      "text": "",
+      "locked": true
+    },
+    {
+      "text": "",
+      "locked": true
+    },
+    {
+      "text": "0.010",
+      "locked": false
+    },
+    {
+      "text": "",
+      "locked": true
+    }
+  ],
+  "headers": [
+    "Open Date",
+    "Symbol",
+    "Action",
+    "Lots",
+    "Open Price",
+    "SL",
+    "TP",
+    "Profit (USD)",
+    "Pips",
+    "Swap",
+    "Gain"
+  ],
+  "source": "https://www.signalstart.com/analysis/forexline/291076"
+}

@@ -1,0 +1,42 @@
+#ss-pnl-watcher {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  box-sizing: border-box;
+  max-width: calc(100vw - 32px);
+  padding: 9px 10px;
+  border: 1px solid #dce5ec;
+  border-radius: 12px;
+  background: #fff;
+  color: #16263a;
+  box-shadow: 0 5px 24px #16263a26;
+  font: 14px/1.35 "Segoe UI", system-ui, sans-serif;
+}
+
+#ss-pnl-watcher .ss-watcher-copy { display: grid; }
+#ss-pnl-watcher .ss-watcher-status { color: #536476; font-size: 12px; }
+#ss-pnl-watcher .ss-watcher-pnl { font-weight: 700; font-variant-numeric: tabular-nums; }
+#ss-pnl-watcher .ss-watcher-pnl.zero { color: #536476; }
+#ss-pnl-watcher .ss-watcher-pnl.pos { color: #065f55; }
+#ss-pnl-watcher .ss-watcher-pnl.neg { color: #a62c40; }
+
+#ss-pnl-watcher .ss-watcher-btn {
+  min-height: 32px;
+  padding: 5px 9px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: #08786b;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#ss-pnl-watcher .ss-watcher-btn.active { background: #edf2f6; color: #16263a; }
+#ss-pnl-watcher .ss-watcher-btn:disabled { opacity: .6; cursor: default; }
+#ss-pnl-watcher .ss-watcher-btn:focus-visible { outline: 2px solid #08786b; outline-offset: 2px; }

@@ -1,0 +1,19 @@
+SignalStart Watcher for Windows Chrome
+
+1. Extract this ZIP, then run SignalStartUpdater.exe.
+2. For a private GitHub release, enter your own GitHub access token
+   with read access to the repository shown in Setup.
+3. Open chrome://extensions. Turn on Developer mode, choose Load
+   unpacked, and select the folder printed by Setup.
+
+The extension checks for signed updates when Chrome starts or its popup
+opens. Refresh any SignalStart analysis tabs already open after an update
+to resume live page reads.
+
+If you already use an unpacked copy from another folder, note your watched
+signals and preferences before switching to the new managed folder.
+
+To replace an expired GitHub token, run the same setup ZIP's executable
+with --replace-token from a Windows PowerShell window in that folder:
+
+    .\SignalStartUpdater.exe --replace-token
