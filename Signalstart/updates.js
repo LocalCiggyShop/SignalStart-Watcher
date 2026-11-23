@@ -5,12 +5,13 @@ const restoreFolder = document.getElementById("restoreFolder");
 const folderStatus = document.getElementById("folderStatus");
 const setupStatus = document.getElementById("setupStatus");
 const writable = { mode: "readwrite" };
-let folder = await readUpdateFolder();
+const canPickFolder = typeof window.showDirectoryPicker === "function";
+let folder = canPickFolder ? await readUpdateFolder() : null;
 
 chooseFolder.addEventListener("click", async () => {
   chooseFolder.disabled = true;
   try {
-    const selected = await showDirectoryPicker({ ...writable, startIn: "desktop" });
+    const selected = await window.showDirectoryPicker({ ...writable, startIn: "desktop" });
     await confirmExtensionFolder(selected);
     await saveUpdateFolder(selected);
     folder = selected;
@@ -43,13 +44,21 @@ restoreFolder.addEventListener("click", async () => {
 await renderSetup();
 
 async function renderSetup() {
+  if (!canPickFolder) {
+    chooseFolder.disabled = true;
+    document.getElementById("folderInstructions").classList.toggle("hidden", true);
+    document.getElementById("manualUpdates").classList.toggle("hidden", false);
+    document.getElementById("braveInstructions").classList.toggle("hidden", typeof navigator.brave?.isBrave !== "function");
+    folderStatus.textContent = "Folder access is unavailable. Signal monitoring can still run.";
+    return;
+  }
   const permission = folder ? await folder.queryPermission(writable) : null;
   restoreFolder.classList.toggle("hidden", !folder || permission === "granted");
   folderStatus.textContent = permission === "granted"
     ? `Folder selected: ${folder.name}`
-    : folder ? "Chrome needs permission to write to this folder." : "Choose your unpacked extension folder.";
+    : folder ? "Your browser needs write access to this folder." : "Choose your unpacked extension folder.";
   setupStatus.textContent = permission === "granted"
-    ? "Updates run when Chrome starts or you open the popup."
+    ? "Updates run when your browser starts or you open the popup."
     : "";
 }
 

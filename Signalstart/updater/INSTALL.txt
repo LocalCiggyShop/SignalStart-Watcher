@@ -1,21 +1,24 @@
-SignalStart Watcher automatic updates in Chrome
+SignalStart Watcher on desktop Chrome and Brave
 
 1. Extract the ZIP to a folder you control, such as a folder on your
-   Desktop or in Documents. Use chrome://extensions, turn on Developer
-   mode, and load the extracted Signalstart version folder once through
-   Load unpacked. Leave that folder in place and Developer mode on.
-2. Open the extension popup and click Updates. Choose the exact folder
-   you loaded and approve Chrome's request for write access.
-3. Select Allow on every visit when Chrome offers it. If the first
-   prompt only offered Allow, restart Chrome once, open Updates,
+   Desktop or in Documents. Open chrome://extensions in Chrome or
+   brave://extensions in Brave, turn on Developer mode, and choose the
+   extracted Signalstart folder with Load unpacked. Leave the folder
+   in place and Developer mode on.
+2. In Brave, enable File System Access API at
+   brave://flags/#file-system-access-api and relaunch the browser if
+   you want automatic updates.
+3. Open the extension popup and click Updates. Choose the exact folder
+   you loaded and approve your browser's request for write access.
+4. Select Allow on every visit when your browser offers it. If the first
+   prompt only offered Allow, restart the browser once, open Updates,
    select Restore folder access, and choose Allow on every visit.
 
-The extension worker checks GitHub for a signed release when Chrome starts or
-when you open the popup. It stages the new files in the selected folder
+The extension worker checks GitHub for a signed release at browser startup
+or when you open the popup. It stages the new files in the selected folder
 and reloads the extension in place. Refresh SignalStart analysis tabs
 that were already open after an update to resume live page reads.
 
-For a v1.5.0 install with an active GitHub token, opening the popup updates
-the extension automatically. Otherwise, extract this ZIP's extension
-files into your existing unpacked folder once and reload the extension
-from chrome://extensions. Keeping the same folder preserves your data.
+To update manually, extract the ZIP contents into your existing unpacked
+extension folder and reload it from your browser's extensions page.
+Keeping the same folder preserves your data.

@@ -16,12 +16,14 @@
     <main>
       <section class="card" aria-labelledby="folderTitle">
         <h2 id="folderTitle">Extension folder</h2>
-        <p class="hint">Choose the folder you loaded in Chrome. If Chrome offers <b>Allow on every visit</b>, select it so updates can run in the background.</p>
+        <p id="folderInstructions" class="hint">Choose your unpacked extension folder. Select <b>Allow on every visit</b> if your browser offers it.</p>
         <div class="setup-actions">
           <button id="chooseFolder" type="button">Choose folder</button>
           <button id="restoreFolder" class="secondary hidden" type="button">Restore folder access</button>
         </div>
         <p id="folderStatus" class="hint" role="status"></p>
+        <p id="braveInstructions" class="hint hidden">In Brave, open <code>brave://flags/#file-system-access-api</code>, set <b>File System Access API</b> to <b>Enabled</b>, and relaunch Brave.</p>
+        <p id="manualUpdates" class="hint hidden"><a href="https://github.com/LocalCiggyShop/SignalStart-Watcher/releases/latest" target="_blank" rel="noopener">Download the latest release</a> to update manually.</p>
       </section>
       <p id="setupStatus" class="hint" role="status"></p>
     </main>
