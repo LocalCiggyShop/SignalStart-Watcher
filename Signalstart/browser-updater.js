@@ -2,8 +2,7 @@ import { RELEASE_PUBLIC_KEY, UPDATE_REPOSITORY } from "./update-config.js";
 
 const databaseName = "signalstart-updates";
 const storeName = "setup";
-const assetName = "signalstart-browser-update.json";
-const github = `https://api.github.com/repos/${UPDATE_REPOSITORY}`;
+const releaseUrl = `https://github.com/${UPDATE_REPOSITORY}/releases/latest/download/signalstart-browser-update.json`;
 const filePermission = { mode: "readwrite" };
 const maxReleaseBytes = 8 * 1024 * 1024;
 const versionPattern = /^(?:0|[1-9]\d{0,4})(?:\.(?:0|[1-9]\d{0,4})){0,3}$/;
@@ -12,8 +11,11 @@ const reservedNamePattern = /^(?:CON|PRN|AUX|NUL|COM\d|LPT\d)(?:\.|$)/i;
 
 function openUpdateDatabase() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(databaseName, 1);
-    request.onupgradeneeded = () => request.result.createObjectStore(storeName);
+    const request = indexedDB.open(databaseName, 2);
+    request.onupgradeneeded = event => {
+      if (event.oldVersion === 0) request.result.createObjectStore(storeName);
+      else request.transaction.objectStore(storeName).delete("token");
+    };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
@@ -33,46 +35,36 @@ async function withUpdateStore(mode, use) {
   }
 }
 
-export function readUpdateSetup() {
+export function readUpdateFolder() {
   return withUpdateStore("readonly", store => {
     const folder = store.get("folder");
-    const token = store.get("token");
-    return () => ({ folder: folder.result, token: token.result });
+    return () => folder.result;
   });
 }
 
-export function saveUpdateSetting(name, value) {
+export function saveUpdateFolder(folder) {
   return withUpdateStore("readwrite", store => {
-    store.put(value, name);
+    store.put(folder, "folder");
     return () => undefined;
   });
 }
 
-async function githubRequest(url, token, accept) {
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: accept,
-      "X-GitHub-Api-Version": "2022-11-28"
-    },
+async function downloadRelease() {
+  const response = await fetch(releaseUrl, {
     credentials: "omit",
-    cache: "no-store",
+    cache: "no-cache",
     signal: AbortSignal.timeout(15000)
   });
-  if ([401, 403, 404].includes(response.status)) {
-    throw new Error("GitHub access failed. Check your read token in Updates.");
-  }
   if (!response.ok) throw new Error(`GitHub returned HTTP ${response.status}.`);
-  return response;
-}
-
-async function latestRelease(token) {
-  const response = await githubRequest(`${github}/releases/latest`, token, "application/vnd.github+json");
-  return response.json();
-}
-
-export async function confirmUpdateToken(token) {
-  await latestRelease(token);
+  let size = 0;
+  const body = response.body.pipeThrough(new TransformStream({
+    transform(chunk, controller) {
+      size += chunk.byteLength;
+      if (size > maxReleaseBytes) throw new Error("The signed update exceeds its size limit.");
+      controller.enqueue(chunk);
+    }
+  }));
+  return new Response(body).json();
 }
 
 function partsForVersion(version) {
@@ -193,23 +185,14 @@ function stagedManifest(manifest, files, folderName) {
 }
 
 export async function installAvailableUpdate() {
-  const { folder, token } = await readUpdateSetup();
-  if (!folder || !token) return "setup";
+  const folder = await readUpdateFolder();
+  if (!folder) return "setup";
   if (await folder.queryPermission(filePermission) !== "granted") return "permission";
 
   const loaded = chrome.runtime.getManifest();
-  const latest = await latestRelease(token);
-  const version = latest.tag_name?.replace(/^v/, "");
+  const release = await verifyRelease(await downloadRelease());
+  const version = release.manifest?.version;
   if (compareVersions(version, loaded.version) <= 0) return "current";
-  const asset = latest.assets?.find(file => file.name === assetName);
-  if (!asset || !Number.isSafeInteger(asset.id) || !Number.isSafeInteger(asset.size) ||
-      asset.size <= 0 || asset.size > maxReleaseBytes) {
-    throw new Error("The signed browser update is unavailable.");
-  }
-
-  const response = await githubRequest(`${github}/releases/assets/${asset.id}`, token, "application/octet-stream");
-  const release = await verifyRelease(await response.json());
-  if (release.manifest?.version !== version) throw new Error("The signed update does not match its release version.");
 
   const onDisk = await confirmExtensionFolder(folder);
   const comparison = compareVersions(onDisk.version, version);

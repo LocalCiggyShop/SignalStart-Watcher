@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SignalStart Floating PL Watcher",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Watch SignalStart signals and get desktop alerts for new trades and Floating P/L changes.",
   "icons": {
     "16": "icons/icon16.png",
@@ -42,7 +42,7 @@
   "host_permissions": [
     "https://www.signalstart.com/*",
     "https://signalstart.com/*",
-    "https://api.github.com/*",
+    "https://github.com/*",
     "https://release-assets.githubusercontent.com/*"
   ]
 }

@@ -34,7 +34,7 @@ globalThis.document = { getElementById: element };
 globalThis.chrome = {
   storage: { onChanged: { addListener(fn) { storageChanged=fn; } } },
   runtime: {
-    getManifest() { return { version: "1.5.0" }; },
+    getManifest() { return { version: "1.5.1" }; },
     async sendMessage(message) {
       if (message.type === "GET_STATE") return structuredClone(popupState);
       if (message.type === "SAVE_SETTINGS") {
@@ -54,7 +54,7 @@ test("drawdown starts disabled with a custom amount and keeps the displayed vers
   assert.equal(element("alertOnDrawdown").checked, false);
   assert.equal(element("drawdownAmount").value, "100");
   assert.equal(element("drawdownAmount").disabled, true);
-  assert.equal(element("versionLabel").textContent, "Version 1.5.0");
+  assert.equal(element("versionLabel").textContent, "Version 1.5.1");
 });
 
 test("shows the actual error below the test button and allows another test", async () => {

@@ -1,8 +1,8 @@
 SignalStart Watcher browser updates
 
 SignalStart Watcher uses the Chrome File System Access API to update the
-unpacked folder the user selects. The update code is in browser-updater.js
-and the user's GitHub token and folder handle stay in their Chrome profile.
+unpacked folder the user selects. The update code is in browser-updater.js.
+The worker downloads a signed asset from the repository's public Releases.
 
 To publish an update:
 
@@ -11,10 +11,10 @@ To publish an update:
    Its matching public key is in update-config.js.
 3. From the Signalstart folder, build with Python and OpenSSL:
 
-   python3 updater/build-release.py --signing-key "/path/to/signalstart-release.pem" --output release-1.5.0
+   python3 updater/build-release.py --signing-key "/path/to/signalstart-release.pem" --output release-1.5.1
 
 4. Create a published GitHub release in LocalCiggyShop/SignalStart-Watcher
-   with the corresponding version tag, for example v1.5.0. Attach the ZIP
+   with the corresponding version tag, for example v1.5.1. Attach the ZIP
    for manual first installs and signalstart-browser-update.json for
    automatic updates. Keep the signed asset filename unchanged.
 

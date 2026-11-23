@@ -266,11 +266,3 @@ footer {
 .updates-page { width: min(100%, 640px); margin: 16px auto; }
 .updates-page .top { border: 1px solid var(--border); border-radius: 12px; }
 .setup-actions { display: flex; gap: 8px; margin-top: 9px; }
-.setup-actions input {
-  flex: 1;
-  min-width: 0;
-  min-height: 34px;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 6px 8px;
-}
