@@ -2,6 +2,7 @@ import { confirmExtensionFolder, readUpdateFolder, saveUpdateFolder } from "./br
 
 const chooseFolder = document.getElementById("chooseFolder");
 const restoreFolder = document.getElementById("restoreFolder");
+const openBraveSettings = document.getElementById("openBraveSettings");
 const folderStatus = document.getElementById("folderStatus");
 const setupStatus = document.getElementById("setupStatus");
 const writable = { mode: "readwrite" };
@@ -41,14 +42,25 @@ restoreFolder.addEventListener("click", async () => {
   }
 });
 
+openBraveSettings.addEventListener("click", async () => {
+  try {
+    await chrome.tabs.create({ url: "brave://flags/#file-system-access-api" });
+  } catch {
+    document.getElementById("braveSettingsFallback").classList.toggle("hidden", false);
+  }
+});
+
 await renderSetup();
 
 async function renderSetup() {
   if (!canPickFolder) {
+    const isBrave = typeof navigator.brave?.isBrave === "function";
     chooseFolder.disabled = true;
+    chooseFolder.classList.toggle("hidden", true);
+    openBraveSettings.classList.toggle("hidden", !isBrave);
     document.getElementById("folderInstructions").classList.toggle("hidden", true);
     document.getElementById("manualUpdates").classList.toggle("hidden", false);
-    document.getElementById("braveInstructions").classList.toggle("hidden", typeof navigator.brave?.isBrave !== "function");
+    document.getElementById("braveInstructions").classList.toggle("hidden", !isBrave);
     folderStatus.textContent = "Folder access is unavailable. Signal monitoring can still run.";
     return;
   }

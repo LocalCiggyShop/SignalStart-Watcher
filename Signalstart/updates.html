@@ -20,9 +20,11 @@
         <div class="setup-actions">
           <button id="chooseFolder" type="button">Choose folder</button>
           <button id="restoreFolder" class="secondary hidden" type="button">Restore folder access</button>
+          <button id="openBraveSettings" class="hidden" type="button" aria-describedby="braveInstructions">Open Brave settings</button>
         </div>
         <p id="folderStatus" class="hint" role="status"></p>
-        <p id="braveInstructions" class="hint hidden">In Brave, open <code>brave://flags/#file-system-access-api</code>, set <b>File System Access API</b> to <b>Enabled</b>, and relaunch Brave.</p>
+        <p id="braveInstructions" class="hint hidden">Set <b>File System Access API</b> to <b>Enabled</b> and click <b>Relaunch</b>. Then return to Updates and choose your folder.</p>
+        <p id="braveSettingsFallback" class="hint hidden error" role="status">Open <code>brave://flags/#file-system-access-api</code> in your address bar.</p>
         <p id="manualUpdates" class="hint hidden"><a href="https://github.com/LocalCiggyShop/SignalStart-Watcher/releases/latest" target="_blank" rel="noopener">Download the latest release</a> to update manually.</p>
       </section>
       <p id="setupStatus" class="hint" role="status"></p>

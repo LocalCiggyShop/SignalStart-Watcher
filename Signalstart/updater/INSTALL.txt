@@ -5,11 +5,11 @@ SignalStart Watcher on desktop Chrome and Brave
    brave://extensions in Brave, turn on Developer mode, and choose the
    extracted Signalstart folder with Load unpacked. Leave the folder
    in place and Developer mode on.
-2. In Brave, enable File System Access API at
-   brave://flags/#file-system-access-api and relaunch the browser if
-   you want automatic updates.
-3. Open the extension popup and click Updates. Choose the exact folder
-   you loaded and approve your browser's request for write access.
+2. Open the extension popup and click Updates. If you see Open Brave
+   settings, click it, enable File System Access API and relaunch Brave.
+   Return to Updates after relaunch.
+3. Click Choose folder, select the exact folder you loaded, and approve
+   your browser's request for write access.
 4. Select Allow on every visit when your browser offers it. If the first
    prompt only offered Allow, restart the browser once, open Updates,
    select Restore folder access, and choose Allow on every visit.
