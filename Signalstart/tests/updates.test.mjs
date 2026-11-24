@@ -11,7 +11,7 @@ function setupPage(brave) {
   globalThis.document = {
     getElementById(id) {
       if (!elements.has(id)) {
-        const hiddenAtStart = ["braveInstructions", "manualUpdates", "openBraveSettings", "braveSettingsFallback"].includes(id);
+        const hiddenAtStart = ["braveInstructions", "manualUpdates", "openBraveSettings", "braveSettingsFallback", "installedFolder", "showInstalledFolder"].includes(id);
         const classes = new Set(hiddenAtStart ? ["hidden"] : []);
         elements.set(id, {
           disabled: false,
@@ -60,4 +60,40 @@ test("other browsers without the picker get only manual update instructions", as
   assert.equal(element("braveInstructions").classList.contains("hidden"), true);
   assert.equal(element("openBraveSettings").classList.contains("hidden"), true);
   assert.equal(element("manualUpdates").classList.contains("hidden"), false);
+});
+
+test("Updates shows and copies the path saved for this installation", async t => {
+  const element = setupPage(true);
+  const path = String.raw`C:\Users\Example\Desktop\Signalstart`;
+  const id = "extension-id";
+  globalThis.chrome = { runtime: { id, getURL: file => `chrome-extension://${id}/${file}` } };
+  t.mock.method(globalThis, "fetch", async url => {
+    assert.equal(url, `chrome-extension://${id}/installed-folder.json`);
+    return Response.json({ extensionId: id, path });
+  });
+  const copied = [];
+  navigator.clipboard = { async writeText(value) { copied.push(value); } };
+
+  await import("../updates.js?installed_path");
+  assert.equal(element("installedFolder").classList.contains("hidden"), false);
+  assert.equal(element("installedFolderPath").value, path);
+  await element("copyInstalledFolder").action();
+  assert.deepEqual(copied, [path]);
+  assert.equal(element("copyFolderStatus").textContent, "Path copied.");
+});
+
+test("Updates opens Brave Details when the saved path is for a different installation", async t => {
+  const element = setupPage(true);
+  const opened = [];
+  globalThis.chrome = {
+    runtime: { id: "current-id", getURL: file => `chrome-extension://current-id/${file}` },
+    tabs: { async create(options) { opened.push(options.url); } }
+  };
+  t.mock.method(globalThis, "fetch", async () => Response.json({ extensionId: "old-id", path: "old path" }));
+
+  await import("../updates.js?stale_path");
+  assert.equal(element("installedFolder").classList.contains("hidden"), true);
+  assert.equal(element("showInstalledFolder").classList.contains("hidden"), false);
+  await element("showInstalledFolder").action();
+  assert.deepEqual(opened, ["brave://extensions/?id=current-id"]);
 });

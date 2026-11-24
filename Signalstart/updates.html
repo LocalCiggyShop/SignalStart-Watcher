@@ -16,13 +16,23 @@
     <main>
       <section class="card" aria-labelledby="folderTitle">
         <h2 id="folderTitle">Extension folder</h2>
-        <p id="folderInstructions" class="hint">Choose your unpacked extension folder. Select <b>Allow on every visit</b> if your browser offers it.</p>
+        <div id="installedFolder" class="installed-folder hidden">
+          <label for="installedFolderPath">Installed folder path</label>
+          <div class="setup-actions">
+            <input id="installedFolderPath" type="text" readonly spellcheck="false" />
+            <button id="copyInstalledFolder" class="secondary" type="button">Copy path</button>
+          </div>
+          <p id="copyFolderStatus" class="hint" role="status"></p>
+        </div>
+        <p id="folderInstructions" class="hint">Select <b>Allow on every visit</b> if your browser offers it.</p>
         <div class="setup-actions">
           <button id="chooseFolder" type="button">Choose folder</button>
           <button id="restoreFolder" class="secondary hidden" type="button">Restore folder access</button>
           <button id="openBraveSettings" class="hidden" type="button" aria-describedby="braveInstructions">Open Brave settings</button>
+          <button id="showInstalledFolder" class="secondary hidden" type="button" aria-describedby="installedFolderHelp">Show installed folder</button>
         </div>
         <p id="folderStatus" class="hint" role="status"></p>
+        <p id="installedFolderHelp" class="hint" role="status"></p>
         <p id="braveInstructions" class="hint hidden">Set <b>File System Access API</b> to <b>Enabled</b> and click <b>Relaunch</b>. Then return to Updates and choose your folder.</p>
         <p id="braveSettingsFallback" class="hint hidden error" role="status">Open <code>brave://flags/#file-system-access-api</code> in your address bar.</p>
         <p id="manualUpdates" class="hint hidden"><a href="https://github.com/LocalCiggyShop/SignalStart-Watcher/releases/latest" target="_blank" rel="noopener">Download the latest release</a> to update manually.</p>

@@ -5,8 +5,13 @@ const restoreFolder = document.getElementById("restoreFolder");
 const openBraveSettings = document.getElementById("openBraveSettings");
 const folderStatus = document.getElementById("folderStatus");
 const setupStatus = document.getElementById("setupStatus");
+const showInstalledFolder = document.getElementById("showInstalledFolder");
+const installedFolderHelp = document.getElementById("installedFolderHelp");
+const installedFolderPath = document.getElementById("installedFolderPath");
+const copyFolderStatus = document.getElementById("copyFolderStatus");
 const writable = { mode: "readwrite" };
 const canPickFolder = typeof window.showDirectoryPicker === "function";
+const isBrave = typeof navigator.brave?.isBrave === "function";
 let folder = canPickFolder ? await readUpdateFolder() : null;
 
 chooseFolder.addEventListener("click", async () => {
@@ -50,11 +55,51 @@ openBraveSettings.addEventListener("click", async () => {
   }
 });
 
+showInstalledFolder.addEventListener("click", async () => {
+  const browser = isBrave ? "brave" : "chrome";
+  try {
+    await chrome.tabs.create({ url: `${browser}://extensions/?id=${chrome.runtime.id}` });
+  } catch {
+    installedFolderHelp.textContent = `Open ${browser}://extensions and select Details for SignalStart Watcher. Click the path under Loaded from to find the folder.`;
+  }
+});
+
+document.getElementById("copyInstalledFolder").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(installedFolderPath.value);
+    copyFolderStatus.textContent = "Path copied.";
+  } catch {
+    installedFolderPath.focus();
+    installedFolderPath.select();
+    copyFolderStatus.textContent = "The path is selected. Use your copy shortcut to copy it.";
+  }
+});
+
 await renderSetup();
+const pathHint = await readInstalledPath();
+if (pathHint) {
+  installedFolderPath.value = pathHint;
+  document.getElementById("installedFolder").classList.toggle("hidden", false);
+} else if (isBrave || canPickFolder) {
+  showInstalledFolder.classList.toggle("hidden", false);
+  installedFolderHelp.textContent = "Click the path under Loaded from in the browser’s extension details to find the folder.";
+}
+
+async function readInstalledPath() {
+  try {
+    const response = await fetch(chrome.runtime.getURL("installed-folder.json"), { cache: "no-store" });
+    if (!response.ok) return null;
+    const hint = await response.json();
+    return hint.extensionId === chrome.runtime.id && typeof hint.path === "string" && hint.path.trim()
+      ? hint.path
+      : null;
+  } catch {
+    return null;
+  }
+}
 
 async function renderSetup() {
   if (!canPickFolder) {
-    const isBrave = typeof navigator.brave?.isBrave === "function";
     chooseFolder.disabled = true;
     chooseFolder.classList.toggle("hidden", true);
     openBraveSettings.classList.toggle("hidden", !isBrave);
@@ -67,7 +112,7 @@ async function renderSetup() {
   const permission = folder ? await folder.queryPermission(writable) : null;
   restoreFolder.classList.toggle("hidden", !folder || permission === "granted");
   folderStatus.textContent = permission === "granted"
-    ? `Folder selected: ${folder.name}`
+    ? `Folder access granted for ${folder.name}.`
     : folder ? "Your browser needs write access to this folder." : "Choose your unpacked extension folder.";
   setupStatus.textContent = permission === "granted"
     ? "Updates run when your browser starts or you open the popup."

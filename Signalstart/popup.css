@@ -265,4 +265,17 @@ footer {
 .version-actions a { color: var(--accent-strong); }
 .updates-page { width: min(100%, 640px); margin: 16px auto; }
 .updates-page .top { border: 1px solid var(--border); border-radius: 12px; }
-.setup-actions { display: flex; gap: 8px; margin-top: 9px; }
+.setup-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
+.installed-folder { margin: 10px 0; }
+.installed-folder label { font-weight: 600; }
+.installed-folder .setup-actions { margin-top: 4px; }
+.installed-folder input {
+  flex: 1 1 240px;
+  min-width: 0;
+  min-height: 34px;
+  padding: 6px 8px;
+  color: var(--ink);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
