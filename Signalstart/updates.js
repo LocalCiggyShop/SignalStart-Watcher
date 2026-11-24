@@ -15,35 +15,39 @@ const isBrave = typeof navigator.brave?.isBrave === "function";
 let folder = canPickFolder ? await readUpdateFolder() : null;
 
 chooseFolder.addEventListener("click", async () => {
-  chooseFolder.disabled = true;
+  setFolderBusy(true);
   try {
-    const selected = await window.showDirectoryPicker({ ...writable, startIn: "desktop" });
+    const selected = await window.showDirectoryPicker({ ...writable, startIn: folder || "desktop" });
+    folderStatus.textContent = "Verifying write access…";
     await confirmExtensionFolder(selected);
     await saveUpdateFolder(selected);
     folder = selected;
-    await renderSetup();
-    checkIfReady();
+    renderFolderAccess("granted");
+    await checkForUpdates();
   } catch (error) {
-    if (error.name !== "AbortError") folderStatus.textContent = error.message;
+    if (error.name !== "AbortError") showFolderError(error);
   } finally {
-    chooseFolder.disabled = false;
+    setFolderBusy(false);
   }
 });
 
 restoreFolder.addEventListener("click", async () => {
-  restoreFolder.disabled = true;
+  setFolderBusy(true);
+  folderStatus.textContent = "Waiting for folder access…";
   try {
-    if (await folder.requestPermission(writable) === "granted") {
-      await confirmExtensionFolder(folder);
-      await renderSetup();
-      checkIfReady();
-    } else {
-      await renderSetup();
+    await folder.requestPermission(writable);
+    if (await folder.queryPermission(writable) !== "granted") {
+      showReselectFolder();
+      return;
     }
+    folderStatus.textContent = "Verifying write access…";
+    await confirmExtensionFolder(folder);
+    renderFolderAccess("granted");
+    await checkForUpdates();
   } catch (error) {
-    folderStatus.textContent = error.message;
+    showFolderError(error);
   } finally {
-    restoreFolder.disabled = false;
+    setFolderBusy(false);
   }
 });
 
@@ -109,20 +113,53 @@ async function renderSetup() {
     folderStatus.textContent = "Folder access is unavailable. Signal monitoring can still run.";
     return;
   }
-  const permission = folder ? await folder.queryPermission(writable) : null;
+  renderFolderAccess(folder ? await folder.queryPermission(writable) : null);
+}
+
+function renderFolderAccess(permission) {
   restoreFolder.classList.toggle("hidden", !folder || permission === "granted");
+  chooseFolder.textContent = "Choose folder";
+  chooseFolder.classList.toggle("secondary", !!folder && permission !== "granted");
   folderStatus.textContent = permission === "granted"
     ? `Folder access granted for ${folder.name}.`
-    : folder ? "Your browser needs write access to this folder." : "Choose your unpacked extension folder.";
+    : folder ? "Restore folder access to check for updates." : "Choose your unpacked extension folder.";
   setupStatus.textContent = permission === "granted"
     ? "Updates run when your browser starts or you open the popup."
     : "";
 }
 
-async function checkIfReady() {
+function setFolderBusy(busy) {
+  chooseFolder.disabled = busy;
+  restoreFolder.disabled = busy;
+}
+
+function showReselectFolder() {
+  renderFolderAccess("prompt");
+  restoreFolder.classList.toggle("hidden", true);
+  chooseFolder.classList.toggle("secondary", false);
+  chooseFolder.textContent = "Choose folder again";
+  folderStatus.textContent = "Choose the installed folder again and approve write access in your browser.";
+}
+
+function showFolderError(error) {
+  if (error.name === "NotAllowedError" || error.name === "SecurityError" || error.name === "NoModificationAllowedError") {
+    showReselectFolder();
+  } else {
+    folderStatus.textContent = error.message;
+  }
+}
+
+async function checkForUpdates() {
+  setupStatus.textContent = "Checking for updates…";
   try {
     const result = await chrome.runtime.sendMessage({ type: "CHECK_FOR_UPDATE" });
-    if (result?.error) setupStatus.textContent = result.error;
+    if (result?.status === "permission" || result?.status === "setup") {
+      showReselectFolder();
+    } else if (result?.error) {
+      setupStatus.textContent = result.error;
+    } else if (result?.status === "current") {
+      setupStatus.textContent = "You’re up to date. Updates run when your browser starts or you open the popup.";
+    }
   } catch {
     // Installing a release reloads the extension and disconnects this settings page.
   }

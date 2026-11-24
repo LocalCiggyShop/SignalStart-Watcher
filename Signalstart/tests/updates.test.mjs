@@ -97,3 +97,107 @@ test("Updates opens Brave Details when the saved path is for a different install
   await element("showInstalledFolder").action();
   assert.deepEqual(opened, ["brave://extensions/?id=current-id"]);
 });
+
+function setupFolderAccess(t, folder) {
+  const element = setupPage(true);
+  const id = "current-id";
+  const manifest = { name: "SignalStart", manifest_version: 3, version: "1.5.5" };
+  const files = new Map([["manifest.json", JSON.stringify(manifest)]]);
+  const requests = [];
+  let saved = folder;
+  globalThis.chrome = { runtime: {
+    id,
+    getURL: name => `chrome-extension://${id}/${name}`,
+    getManifest: () => manifest,
+    async sendMessage(message) {
+      requests.push(message);
+      return { status: "current" };
+    }
+  } };
+  globalThis.indexedDB = {
+    open() {
+      const request = { result: {
+        transaction() {
+          const transaction = { objectStore: () => ({
+            get: () => ({ result: saved }),
+            put: next => { saved = next; }
+          }) };
+          queueMicrotask(() => transaction.oncomplete());
+          return transaction;
+        },
+        close() {}
+      } };
+      queueMicrotask(() => request.onsuccess());
+      return request;
+    }
+  };
+  t.mock.method(globalThis, "fetch", async url => {
+    const body = files.get(new URL(url).pathname.slice(1));
+    return new Response(body, { status: body === undefined ? 404 : 200 });
+  });
+
+  const writableFolder = {
+    name: "SignalStart",
+    async queryPermission() { return "granted"; },
+    async getFileHandle(name) {
+      return {
+        async getFile() { return new Blob([files.get(name)]); },
+        async createWritable() {
+          return { async write(content) { files.set(name, content); }, async close() {} };
+        }
+      };
+    },
+    async removeEntry(name) { files.delete(name); }
+  };
+  window.showDirectoryPicker = async options => {
+    assert.equal(options.startIn, folder);
+    assert.equal(options.mode, "readwrite");
+    return writableFolder;
+  };
+  return { element, requests, writableFolder, readSaved: () => saved };
+}
+
+test("restore confirms the write grant before showing success and checking for updates", async t => {
+  let permission = "prompt";
+  let allow;
+  const approval = new Promise(resolve => { allow = resolve; });
+  const folder = {
+    async requestPermission() { await approval; permission = "granted"; return permission; },
+    async queryPermission() { return permission; }
+  };
+  const { element, requests, writableFolder } = setupFolderAccess(t, folder);
+  folder.name = writableFolder.name;
+  folder.getFileHandle = writableFolder.getFileHandle;
+  folder.removeEntry = writableFolder.removeEntry;
+  await import("../updates.js?restored");
+
+  const restore = element("restoreFolder").action();
+  assert.equal(element("folderStatus").textContent, "Waiting for folder access…");
+  assert.equal(element("chooseFolder").disabled, true);
+  assert.equal(requests.length, 0);
+  allow();
+  await restore;
+  assert.match(element("folderStatus").textContent, /^Folder access granted/);
+  assert.match(element("setupStatus").textContent, /^You’re up to date/);
+  assert.deepEqual(requests, [{ type: "CHECK_FOR_UPDATE" }]);
+});
+
+test("write access that remains pending can be recovered by reselecting the saved folder", async t => {
+  const folder = {
+    async requestPermission() { return "prompt"; },
+    async queryPermission() { return "prompt"; }
+  };
+  const { element, requests, writableFolder, readSaved } = setupFolderAccess(t, folder);
+  await import("../updates.js?reselect");
+
+  await element("restoreFolder").action();
+  assert.equal(element("restoreFolder").classList.contains("hidden"), true);
+  assert.equal(element("chooseFolder").textContent, "Choose folder again");
+  assert.equal(requests.length, 0);
+  assert.equal(readSaved(), folder);
+
+  await element("chooseFolder").action();
+  assert.equal(readSaved(), writableFolder);
+  assert.match(element("folderStatus").textContent, /^Folder access granted/);
+  assert.deepEqual(requests, [{ type: "CHECK_FOR_UPDATE" }]);
+});

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SignalStart Floating PL Watcher",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "Watch SignalStart signals and get desktop alerts for new trades and Floating P/L changes.",
   "icons": {
     "16": "icons/icon16.png",

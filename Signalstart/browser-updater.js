@@ -132,11 +132,17 @@ async function installedManifest(folder) {
 }
 
 export async function confirmExtensionFolder(folder) {
+  const wrongFolder = "Choose the same SignalStart folder you loaded in your browser.";
   const loaded = chrome.runtime.getManifest();
-  const selected = await installedManifest(folder);
+  const selected = await installedManifest(folder).catch(error => {
+    if (["NotFoundError", "TypeMismatchError", "SyntaxError"].includes(error.name)) {
+      throw new Error(wrongFolder, { cause: error });
+    }
+    throw error;
+  });
   if (selected.name !== loaded.name || selected.manifest_version !== 3 ||
       selected.key !== loaded.key || compareVersions(selected.version, loaded.version) < 0) {
-    throw new Error("Select the same SignalStart folder you loaded in Chrome.");
+    throw new Error(wrongFolder);
   }
 
   // Prove Chrome serves files from this folder, including when two copies have the same version.
@@ -144,10 +150,8 @@ export async function confirmExtensionFolder(folder) {
   const name = `signalstart-folder-check-${nonce}.txt`;
   try {
     await writeFile(folder, name, nonce);
-    const response = await fetch(chrome.runtime.getURL(name), { cache: "no-store" });
-    if (!response.ok || await response.text() !== nonce) throw new Error("Folder mismatch.");
-  } catch {
-    throw new Error("Select the same SignalStart folder you loaded in Chrome.");
+    const response = await fetch(chrome.runtime.getURL(name), { cache: "no-store" }).catch(() => null);
+    if (!response?.ok || await response.text() !== nonce) throw new Error(wrongFolder);
   } finally {
     await folder.removeEntry(name).catch(() => {});
   }

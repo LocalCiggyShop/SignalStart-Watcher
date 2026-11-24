@@ -14,6 +14,9 @@ SignalStart Watcher on desktop Chrome and Brave
 4. Select Allow on every visit when your browser offers it. If the first
    prompt only offered Allow, restart the browser once, open Updates,
    select Restore folder access, and choose Allow on every visit.
+   If access still needs approval, select Choose folder again and approve
+   write access to the same folder. Updates confirms access and checks
+   for a release after it verifies it can write to the folder.
 
 The extension worker checks GitHub for a signed release at browser startup
 or when you open the popup. It stages the new files in the selected folder
