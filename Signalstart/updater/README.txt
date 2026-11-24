@@ -14,8 +14,9 @@ To publish an update:
    python3 updater/build-release.py --signing-key "/path/to/signalstart-release.pem" --output release-1.5.1
 
 4. Create a published GitHub release in LocalCiggyShop/SignalStart-Watcher
-   with the corresponding version tag, for example v1.5.1. Attach the ZIP
-   for manual first installs and signalstart-browser-update.json for
-   automatic updates. Keep the signed asset filename unchanged.
+   with the corresponding version tag, for example v1.5.1. Attach
+   Signalstart.zip for the repository's download button and
+   signalstart-browser-update.json for automatic updates. Keep these two
+   asset filenames unchanged.
 
 The required first-time browser permissions are described in INSTALL.txt.

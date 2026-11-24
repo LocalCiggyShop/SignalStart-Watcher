@@ -50,7 +50,7 @@ def build(args):
         json.dumps(envelope, separators=(",", ":")) + "\n", encoding="utf-8"
     )
     folder = f"Signalstart_v{version}"
-    package = args.output / f"{folder}.zip"
+    package = args.output / "Signalstart.zip"
     with ZipFile(package, "x", ZIP_DEFLATED) as archive:
         archive.write(UPDATER / "INSTALL.txt", "INSTALL.txt")
         for name, data in files.items():
