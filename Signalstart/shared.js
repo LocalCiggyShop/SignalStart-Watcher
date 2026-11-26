@@ -195,9 +195,10 @@ export function evaluateAlert(previous, next, settings) {
   if (!merged.alertOnOpenTrades || !Number.isSafeInteger(previous?.openTrades) ||
       !Number.isSafeInteger(next?.openTrades)) return floating;
 
-  const countIncrease = next.openTrades - previous.openTrades;
+  const countChange = next.openTrades - previous.openTrades;
   let newEntries = 0;
-  if (Array.isArray(previous.openTradeKeys) && Array.isArray(next.openTradeKeys)) {
+  if (Array.isArray(previous.openTradeKeys) && Array.isArray(next.openTradeKeys) &&
+      previous.openTradeKeys.length === previous.openTrades && next.openTradeKeys.length === next.openTrades) {
     const existing = new Map();
     for (const key of previous.openTradeKeys) {
       existing.set(key, (existing.get(key) || 0) + 1);
@@ -208,16 +209,26 @@ export function evaluateAlert(previous, next, settings) {
       else newEntries++;
     }
   }
-  const opened = Math.max(countIncrease, newEntries);
-  if (opened <= 0) return floating;
+  const opened = Math.max(countChange, newEntries);
+  // The net change equals the number of openings minus the number of removals.
+  const removed = opened - countChange;
+  if (opened === 0 && removed === 0) return floating;
 
-  const tradeMessage = countIncrease > 0
-    ? `Open trades increased from ${previous.openTrades} to ${next.openTrades}.`
+  const tradeMessage = countChange
+    ? `Open trades ${countChange > 0 ? "increased" : "decreased"} from ${previous.openTrades} to ${next.openTrades}.`
     : `${next.openTrades} open ${next.openTrades === 1 ? "trade" : "trades"} now.`;
+  let title;
+  if (opened && removed) {
+    title = `${opened} ${opened === 1 ? "trade" : "trades"} opened, ${removed} removed`;
+  } else if (opened) {
+    title = opened === 1 ? "New trade opened" : `${opened} new trades opened`;
+  } else {
+    title = removed === 1 ? "Trade removed" : `${removed} trades removed`;
+  }
   return {
     shouldAlert: true,
     kind: "open-trades",
-    title: opened === 1 ? "New trade opened" : `${opened} new trades opened`,
+    title,
     message: floating.shouldAlert ? `${tradeMessage} ${floating.message}` : tradeMessage
   };
 }

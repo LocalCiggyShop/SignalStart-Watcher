@@ -295,6 +295,7 @@ test("new-trade alerts work for polls and live changes and respect both switches
   await send("POLL_NOW");
   await live(0, 2, ["first", "third"]);
   assert.equal(notifications.length, count + 2, "a replacement trade is detected when the count stays the same");
+  assert.match(notifications.at(-1).options.title, /1 trade opened, 1 removed/);
   await live(-20, 3, ["first", "third", "fourth"]);
   assert.equal(notifications.length, count + 3);
   assert.match(notifications.at(-1).options.title, /New trade opened/);
@@ -337,11 +338,57 @@ test("background polling recognizes trade replacements and agrees with the page 
   fetchImpl = async () => htmlResponse("-$46.19", 2, [kept, opened]);
   await send("POLL_NOW");
   assert.equal(notifications.length, count + 1);
-  assert.match(notifications.at(-1).options.title, /New trade opened/);
+  assert.match(notifications.at(-1).options.title, /1 trade opened, 1 removed/);
 
   await live(-46.19, 2, [JSON.stringify(kept), JSON.stringify([opened[0], "GER&40"])]);
   await send("POLL_NOW");
   assert.equal(notifications.length, count + 1, "the same rows from a tab or a poll do not alert again");
+});
+
+test("trade removals alert with or without visible rows and respect both alert switches", async () => {
+  const first = ["26/11/2026", "EURUSD"];
+  const second = ["27/11/2026", "GBPUSD"];
+  const third = ["27/11/2026", "XAUUSD"];
+  fetchImpl = async () => htmlResponse("$0.00", 4, [first, first, second, third]);
+  await send("SAVE_SETTINGS", { settings: {
+    notificationsEnabled: true,
+    alertOnOpenTrades: true,
+    alertOnLeaveZero: false,
+    alertOnAnyChange: false,
+    alertOnDrawdown: false
+  } });
+  await send("REMOVE_SIGNAL", { id: "123" });
+  const before = notifications.length;
+  await send("ADD_SIGNAL", { payload: signal });
+  assert.equal(notifications.length, before);
+
+  const replacement = JSON.stringify(["27/11/2026", "USDJPY"]);
+  await live(0, 3, [JSON.stringify(first), JSON.stringify(third), replacement]);
+  assert.equal(notifications.length, before + 1);
+  assert.match(notifications.at(-1).options.title, /1 trade opened, 2 removed/);
+
+  fetchImpl = async () => htmlResponse("$0.00", 2);
+  await send("POLL_NOW");
+  assert.equal(notifications.length, before + 2);
+  assert.match(notifications.at(-1).options.title, /Trade removed/);
+  assert.match(notifications.at(-1).options.message, /decreased from 3 to 2/);
+  await live(0, 2);
+  assert.equal(notifications.length, before + 2);
+
+  await live(0, 0);
+  assert.equal(notifications.length, before + 3);
+  assert.match(notifications.at(-1).options.title, /2 trades removed/);
+  await live(0, 0);
+  assert.equal(notifications.length, before + 3);
+
+  await send("SAVE_SETTINGS", { settings: { alertOnOpenTrades: false } });
+  await live(0, 2);
+  await live(0, 1);
+  await send("SAVE_SETTINGS", { settings: { notificationsEnabled: false, alertOnOpenTrades: true } });
+  await live(0, 0);
+  await send("SAVE_SETTINGS", { settings: { notificationsEnabled: true } });
+  await live(0, 0);
+  assert.equal(notifications.length, before + 3);
 });
 
 test("desktop API failures preserve the latest signal stats and surface the error", async () => {
