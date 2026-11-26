@@ -1,3 +1,5 @@
+import "./trade-reader.js";
+
 export const STORAGE_KEYS = {
   signals: "signals",
   settings: "settings"
@@ -98,12 +100,29 @@ function extractLabeledValue(html, label) {
   };
 }
 
+function openTradeKeysFromHtml(html, count) {
+  if (count === 0) return [];
+  if (!Number.isSafeInteger(count) || count <= 0) return null;
+  const table = html.match(/<table\b[^>]*\sid\s*=\s*["']openTradesTable["'][^>]*>([\s\S]*?)<\/table>/i)?.[1];
+  const head = table?.match(/<thead\b[^>]*>([\s\S]*?)<\/thead>/i)?.[1];
+  const body = table?.match(/<tbody\b[^>]*>([\s\S]*?)<\/tbody>/i)?.[1];
+  if (!head || !body) return null;
+
+  const cellText = ([, content]) => decodeHtmlEntities(content.replace(/<[^>]+>/g, ""));
+  const headers = Array.from(head.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi), cellText);
+  const rows = Array.from(body.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi), ([, row]) =>
+    Array.from(row.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi), cellText)
+  );
+  return globalThis.SignalStartTradeReader.openTradeKeysFromRows(headers, rows, count);
+}
+
 export function parseStatsFromHtml(html) {
   if (!html) return null;
   const floating = extractLabeledValue(html, "Floating\\s*PL");
   if (!floating || floating.value == null) return null;
 
   const openTradesMatch = html.match(/Open\s*Trades\s*\((\d+)\)/i);
+  const openTrades = openTradesMatch ? Number(openTradesMatch[1]) : null;
   const freshnessMatch = html.match(/caption-helper[^>]*>\s*([^<]+?ago)\s*</i);
   const nameMatch =
     html.match(/<h1[^>]*>\s*([^<]+?)\s*(?:Forex Signals)?\s*<\/h1>/i) ||
@@ -115,7 +134,8 @@ export function parseStatsFromHtml(html) {
   return {
     floatingDisplay: floating.display,
     floatingValue: floating.value,
-    openTrades: openTradesMatch ? Number(openTradesMatch[1]) : null,
+    openTrades,
+    openTradeKeys: openTradeKeysFromHtml(html, openTrades),
     freshness: freshnessMatch ? decodeHtmlEntities(freshnessMatch[1]).trim() : null,
     name: name || null
   };

@@ -10,7 +10,6 @@ import {
   pollMinutesFromSettings,
   percentChange
 } from "./shared.js";
-import "./trade-reader.js";
 import { installAvailableUpdate } from "./browser-updater.js";
 
 const ALARM_NAME = "signalstart-poll";

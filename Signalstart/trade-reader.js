@@ -57,29 +57,36 @@ globalThis.SignalStartTradeReader = (() => {
     return [...keys].sort();
   }
 
-  function readOpenTradeKeys(doc, count) {
+  function openTradeKeysFromRows(headers, rows, count) {
     if (count === 0) return [];
     if (!Number.isSafeInteger(count) || count <= 0) return null;
-    const table = doc.getElementById("openTradesListData")?.querySelector("#openTradesTable");
-    if (!table) return null;
-    const headers = [...table.querySelectorAll("thead th")].map(
-      cell => text(cell.textContent).toLowerCase().replace(/[^a-z0-9]/g, "")
-    );
-    const date = headers.findIndex(header => header === "opendate" || header === "opentime");
-    const symbol = headers.indexOf("symbol");
+    const columns = headers.map(header => text(header).toLowerCase().replace(/[^a-z0-9]/g, ""));
+    const date = columns.findIndex(header => header === "opendate" || header === "opentime");
+    const symbol = columns.indexOf("symbol");
     if (date < 0 || symbol < 0) return null;
 
     const keys = [];
-    for (const row of table.querySelectorAll("tbody tr")) {
-      const cells = row.querySelectorAll("td");
+    for (const cells of rows) {
       if (cells.length <= 1) continue;
-      const openedAt = text(cells[date]?.textContent);
-      const instrument = text(cells[symbol]?.textContent).toUpperCase();
+      const openedAt = text(cells[date]);
+      const instrument = text(cells[symbol]).toUpperCase();
       if (!openedAt || !instrument) return null;
       keys.push(JSON.stringify([openedAt, instrument]));
     }
     return validateOpenTradeKeys(keys, count);
   }
 
-  return Object.freeze({ read, validate, readOpenTradeKeys, validateOpenTradeKeys });
+  function readOpenTradeKeys(doc, count) {
+    if (count === 0) return [];
+    if (!Number.isSafeInteger(count) || count <= 0) return null;
+    const table = doc.getElementById("openTradesListData")?.querySelector("#openTradesTable");
+    if (!table) return null;
+    const headers = [...table.querySelectorAll("thead th")].map(cell => cell.textContent);
+    const rows = [...table.querySelectorAll("tbody tr")].map(
+      row => [...row.querySelectorAll("td")].map(cell => cell.textContent)
+    );
+    return openTradeKeysFromRows(headers, rows, count);
+  }
+
+  return Object.freeze({ read, validate, readOpenTradeKeys, openTradeKeysFromRows, validateOpenTradeKeys });
 })();

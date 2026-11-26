@@ -28,11 +28,17 @@ let fetchImpl = async () => htmlResponse("$0.00");
 let browserWindows = [{ id: 1 }];
 let offscreenOpen = false;
 
-function htmlResponse(value, openTrades) {
+function htmlResponse(value, openTrades, openRows) {
+  const table = openRows && `<table id="openTradesTable">
+    <thead><tr><th><a>Open Date</a></th><th><a>Symbol</a></th><th>Lots</th></tr></thead>
+    <tbody>${openRows.map(([date, symbol]) => `<tr><td><nobr>${date}</nobr></td>
+      <td><nobr><span>${symbol}</span></nobr></td><td><span class="fa fa-lock"></span></td></tr>`).join("")}</tbody>
+  </table>`;
   return {
     ok: true,
     text: async () => `<li>Floating PL: <span>${value}</span></li>` +
-      (openTrades == null ? "" : `<a>Open Trades (${openTrades})</a>`)
+      (openTrades == null ? "" : `<a href="#openTradesListData">Open Trades (${openTrades})</a>`) +
+      (table || "")
   };
 }
 
@@ -311,6 +317,31 @@ test("new-trade alerts work for polls and live changes and respect both switches
   await live(-20, 4);
   assert.equal(notifications.length, count + 5);
   assert.match(notifications.at(-1).options.title, /2 new trades opened/);
+});
+
+test("background polling recognizes trade replacements and agrees with the page watcher", async () => {
+  const old = ["26/11/2026", "XAUUSD.R"];
+  const kept = ["26/11/2026", "BTCUSD"];
+  const opened = ["27/11/2026", "GER&amp;40"];
+  fetchImpl = async () => htmlResponse("-$46.19", 2, [old, kept]);
+  await send("REMOVE_SIGNAL", { id: "123" });
+  const count = notifications.length;
+  await send("ADD_SIGNAL", { payload: signal });
+  assert.equal(notifications.length, count);
+
+  // A partial page must not discard the identities from the last complete reading.
+  fetchImpl = async () => htmlResponse("-$46.19", 2, [kept]);
+  await send("POLL_NOW");
+  assert.equal(notifications.length, count);
+
+  fetchImpl = async () => htmlResponse("-$46.19", 2, [kept, opened]);
+  await send("POLL_NOW");
+  assert.equal(notifications.length, count + 1);
+  assert.match(notifications.at(-1).options.title, /New trade opened/);
+
+  await live(-46.19, 2, [JSON.stringify(kept), JSON.stringify([opened[0], "GER&40"])]);
+  await send("POLL_NOW");
+  assert.equal(notifications.length, count + 1, "the same rows from a tab or a poll do not alert again");
 });
 
 test("desktop API failures preserve the latest signal stats and surface the error", async () => {
